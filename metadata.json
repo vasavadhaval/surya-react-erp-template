@@ -1,0 +1,6 @@
+{
+  "name": "React Admin Dashboard Template",
+  "description": "A production-grade, modular React and TypeScript admin dashboard template with rich data tables, charts, e-commerce, CRM, settings, and Laravel-ready services.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
