@@ -35,7 +35,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
-  const [compactMode, setCompactMode] = useState<boolean>(false);
+  const [compactMode, setCompactMode] = useState<boolean>(() => {
+    return localStorage.getItem('app_content_compact') === 'true';
+  });
   const [rtlMode, setRtlMode] = useState<boolean>(false);
 
   const isDark = mode === 'dark' || (mode === 'system' && systemIsDark);
@@ -59,6 +61,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('app_sidebar_collapsed', String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('app_content_compact', String(compactMode));
+  }, [compactMode]);
 
   useEffect(() => {
     document.documentElement.dir = rtlMode ? 'rtl' : 'ltr';

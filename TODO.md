@@ -6,6 +6,7 @@ This checklist tracks template capabilities. An item is only marked complete aft
 
 - [x] React application shell, responsive sidebar, header, theme settings
 - [x] Reliable light, dark, and system theme switching
+- [x] Template customizer for theme mode and content width
 - [x] Recursive navigation configuration with permissions and feature flags
 - [x] Reusable page header, breadcrumbs, empty state, skeleton, confirmation dialog
 - [ ] Laravel authentication, API error handling, and permission data connection
