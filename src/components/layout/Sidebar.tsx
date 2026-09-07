@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, Sparkles, X } from 'lucide-react';
 import { navigation, navigationDefaults, type NavigationItem } from '../../config/navigation';
 import { useTheme } from '../../context/ThemeContext';
+import { useNavigationAccess } from '../../context/NavigationAccessContext';
 
 type MenuNodeProps = {
   item: NavigationItem;
@@ -17,12 +18,10 @@ const hasActiveChild = (item: NavigationItem, pathname: string): boolean =>
   Boolean(item.href && (pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`)))) ||
   Boolean(item.children?.some((child) => hasActiveChild(child, pathname)));
 
-const isVisible = (item: NavigationItem): boolean =>
-  (!item.permission || navigationDefaults.permissions.includes(item.permission)) &&
-  (!item.feature || navigationDefaults.features.includes(item.feature));
-
 const MenuNode: FC<MenuNodeProps> = ({ item, level, collapsed, expanded, toggle, onNavigate }) => {
   const location = useLocation();
+  const { can, hasFeature } = useNavigationAccess();
+  const isVisible = (candidate: NavigationItem) => can(candidate.permission) && hasFeature(candidate.feature);
   const children = item.children?.filter(isVisible) ?? [];
   const hasChildren = children.length > 0;
   const isActive = hasActiveChild(item, location.pathname);
@@ -68,6 +67,8 @@ const MenuNode: FC<MenuNodeProps> = ({ item, level, collapsed, expanded, toggle,
 export function Sidebar() {
   const { sidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useTheme();
   const location = useLocation();
+  const { can, hasFeature } = useNavigationAccess();
+  const isVisible = (item: NavigationItem) => can(item.permission) && hasFeature(item.feature);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(() => ({ dashboards: true, 'e-commerce': location.pathname.startsWith('/ecommerce'), users: location.pathname.startsWith('/users') }));
   const toggleMenu = (id: string) => setExpandedMenus((current) => ({ ...current, [id]: !current[id] }));
   const closeMobileMenu = () => setMobileSidebarOpen(false);

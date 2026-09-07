@@ -20,8 +20,15 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<ThemeMode>(() => {
-    return (localStorage.getItem('app_theme') as ThemeMode) || 'light';
+    const savedMode = localStorage.getItem('app_theme');
+    return savedMode === 'light' || savedMode === 'dark' || savedMode === 'system'
+      ? savedMode
+      : 'system';
   });
+
+  const [systemIsDark, setSystemIsDark] = useState(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('app_sidebar_collapsed') === 'true';
@@ -31,16 +38,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [compactMode, setCompactMode] = useState<boolean>(false);
   const [rtlMode, setRtlMode] = useState<boolean>(false);
 
-  const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDark = mode === 'dark' || (mode === 'system' && systemIsDark);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => setSystemIsDark(event.matches);
+    setSystemIsDark(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('app_theme', mode);
     const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    root.classList.toggle('dark', isDark);
+    root.dataset.theme = isDark ? 'dark' : 'light';
+    root.style.colorScheme = isDark ? 'dark' : 'light';
   }, [mode, isDark]);
 
   useEffect(() => {

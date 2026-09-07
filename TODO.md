@@ -5,10 +5,11 @@ This checklist tracks template capabilities. An item is only marked complete aft
 ## Foundation
 
 - [x] React application shell, responsive sidebar, header, theme settings
+- [x] Reliable light, dark, and system theme switching
 - [x] Recursive navigation configuration with permissions and feature flags
 - [x] Reusable page header, breadcrumbs, empty state, skeleton, confirmation dialog
 - [ ] Laravel authentication, API error handling, and permission data connection
-- [ ] Route-level lazy loading and smaller production bundles
+- [x] Route-level lazy loading and smaller production bundles
 
 ## Components
 

@@ -1,54 +1,52 @@
-import React from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { NavigationAccessProvider, type NavigationAccess } from './context/NavigationAccessContext';
 import { AppShell } from './components/layout/AppShell';
+import { Spinner } from './components/ui/Spinner';
 
-// Dashboard Pages
-import { OverviewDashboard } from './pages/dashboard/OverviewDashboard';
-import { DashboardVariants } from './pages/dashboard/DashboardVariants';
+const page = <T extends Record<string, unknown>>(loader: () => Promise<T>, name: keyof T) =>
+  lazy(() => loader().then((module) => ({ default: module[name] as ComponentType })));
 
-// E-Commerce Pages
-import { ProductListPage } from './pages/ecommerce/ProductListPage';
-import { ProductFormPage } from './pages/ecommerce/ProductFormPage';
-import { ProductDetailPage } from './pages/ecommerce/ProductDetailPage';
-import { CategoriesPage } from './pages/ecommerce/CategoriesPage';
-import { OrderListPage } from './pages/ecommerce/OrderListPage';
-import { OrderDetailPage } from './pages/ecommerce/OrderDetailPage';
-import { CustomerListPage } from './pages/ecommerce/CustomerListPage';
-import { CustomerDetailPage } from './pages/ecommerce/CustomerDetailPage';
-import { InventoryPage } from './pages/ecommerce/InventoryPage';
+const OverviewDashboard = page(() => import('./pages/dashboard/OverviewDashboard'), 'OverviewDashboard');
+const DashboardVariants = page(() => import('./pages/dashboard/DashboardVariants'), 'DashboardVariants');
+const ProductListPage = page(() => import('./pages/ecommerce/ProductListPage'), 'ProductListPage');
+const ProductFormPage = page(() => import('./pages/ecommerce/ProductFormPage'), 'ProductFormPage');
+const ProductDetailPage = page(() => import('./pages/ecommerce/ProductDetailPage'), 'ProductDetailPage');
+const CategoriesPage = page(() => import('./pages/ecommerce/CategoriesPage'), 'CategoriesPage');
+const OrderListPage = page(() => import('./pages/ecommerce/OrderListPage'), 'OrderListPage');
+const OrderDetailPage = page(() => import('./pages/ecommerce/OrderDetailPage'), 'OrderDetailPage');
+const CustomerListPage = page(() => import('./pages/ecommerce/CustomerListPage'), 'CustomerListPage');
+const CustomerDetailPage = page(() => import('./pages/ecommerce/CustomerDetailPage'), 'CustomerDetailPage');
+const InventoryPage = page(() => import('./pages/ecommerce/InventoryPage'), 'InventoryPage');
+const InvoiceListPage = page(() => import('./pages/invoices/InvoiceListPage'), 'InvoiceListPage');
+const InvoiceDetailPage = page(() => import('./pages/invoices/InvoiceDetailPage'), 'InvoiceDetailPage');
+const UserListPage = page(() => import('./pages/users/UserListPage'), 'UserListPage');
+const UserCreatePage = page(() => import('./pages/users/UserCreatePage'), 'UserCreatePage');
+const RolesPermissionsPage = page(() => import('./pages/users/RolesPermissionsPage'), 'RolesPermissionsPage');
+const CalendarPage = page(() => import('./pages/apps/CalendarPage'), 'CalendarPage');
+const KanbanPage = page(() => import('./pages/apps/KanbanPage'), 'KanbanPage');
+const ChatPage = page(() => import('./pages/apps/ChatPage'), 'ChatPage');
+const EmailPage = page(() => import('./pages/apps/EmailPage'), 'EmailPage');
+const FileManagerPage = page(() => import('./pages/apps/FileManagerPage'), 'FileManagerPage');
+const ComponentShowcasePage = page(() => import('./pages/ui/ComponentShowcasePage'), 'ComponentShowcasePage');
+const CardsPage = page(() => import('./pages/ui/CardsPage'), 'CardsPage');
+const UserInterfacePage = page(() => import('./pages/ui/UserInterfacePage'), 'UserInterfacePage');
+const SettingsPage = page(() => import('./pages/settings/SettingsPage'), 'SettingsPage');
+const AuthPages = page(() => import('./pages/auth/AuthPages'), 'AuthPages');
+const SystemPages = page(() => import('./pages/system/SystemPages'), 'SystemPages');
 
-// Invoicing & Billing
-import { InvoiceListPage } from './pages/invoices/InvoiceListPage';
-import { InvoiceDetailPage } from './pages/invoices/InvoiceDetailPage';
+const RouteLoader = () => <div className="grid min-h-[50vh] place-items-center"><Spinner size="lg" label="Loading page" /></div>;
 
-// User & Role Management
-import { UserListPage } from './pages/users/UserListPage';
-import { UserCreatePage } from './pages/users/UserCreatePage';
-import { RolesPermissionsPage } from './pages/users/RolesPermissionsPage';
-
-// Applications
-import { CalendarPage } from './pages/apps/CalendarPage';
-import { KanbanPage } from './pages/apps/KanbanPage';
-import { ChatPage } from './pages/apps/ChatPage';
-import { EmailPage } from './pages/apps/EmailPage';
-import { FileManagerPage } from './pages/apps/FileManagerPage';
-
-// System & UI
-import { ComponentShowcasePage } from './pages/ui/ComponentShowcasePage';
-import { CardsPage } from './pages/ui/CardsPage';
-import { UserInterfacePage } from './pages/ui/UserInterfacePage';
-import { SettingsPage } from './pages/settings/SettingsPage';
-import { AuthPages } from './pages/auth/AuthPages';
-import { SystemPages } from './pages/system/SystemPages';
-
-export default function App() {
+export default function App({ navigationAccess }: { navigationAccess?: NavigationAccess }) {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <BrowserRouter>
-          <Routes>
+        <NavigationAccessProvider {...navigationAccess}>
+          <BrowserRouter>
+            <Suspense fallback={<RouteLoader />}>
+              <Routes>
             {/* Standalone Authentication Screen Route */}
             <Route path="/auth" element={<AuthPages />} />
 
@@ -107,8 +105,10 @@ export default function App() {
 
             {/* Fallback 404 Route */}
             <Route path="*" element={<SystemPages />} />
-          </Routes>
-        </BrowserRouter>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </NavigationAccessProvider>
       </ToastProvider>
     </ThemeProvider>
   );

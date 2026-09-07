@@ -146,7 +146,5 @@ export const navigation: NavigationSection[] = [
 ];
 
 export const navigationDefaults = {
-  permissions: ['users.view', 'roles.view'],
-  features: ['commerce', 'billing', 'calendar', 'kanban', 'chat', 'email', 'files'],
   fallbackIcon: ChevronRight,
 };

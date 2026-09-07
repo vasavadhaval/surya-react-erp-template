@@ -26,7 +26,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 
 export const SettingsPage: React.FC = () => {
-  const { isDark, setMode, compactMode, setCompactMode } = useTheme();
+  const { mode, setMode, compactMode, setCompactMode } = useTheme();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<
@@ -148,12 +148,12 @@ export const SettingsPage: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Theme Color Mode
                   </label>
-                  <div className="grid grid-cols-2 gap-3 max-w-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg">
                     <button
                       type="button"
                       onClick={() => setMode('light')}
                       className={`p-3 rounded-xl border text-center font-medium transition-all ${
-                        !isDark
+                        mode === 'light'
                           ? 'border-indigo-600 bg-indigo-50/50 text-indigo-600 font-bold'
                           : 'border-slate-200 dark:border-slate-800'
                       }`}
@@ -164,12 +164,23 @@ export const SettingsPage: React.FC = () => {
                       type="button"
                       onClick={() => setMode('dark')}
                       className={`p-3 rounded-xl border text-center font-medium transition-all ${
-                        isDark
+                        mode === 'dark'
                           ? 'border-indigo-600 bg-indigo-950/50 text-indigo-400 font-bold'
                           : 'border-slate-200 dark:border-slate-800'
                       }`}
                     >
                       Dark Executive
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode('system')}
+                      className={`p-3 rounded-xl border text-center font-medium transition-all ${
+                        mode === 'system'
+                          ? 'border-indigo-600 bg-indigo-50/50 text-indigo-600 font-bold dark:bg-indigo-950/50 dark:text-indigo-400'
+                          : 'border-slate-200 dark:border-slate-800'
+                      }`}
+                    >
+                      Use System
                     </button>
                   </div>
                 </div>

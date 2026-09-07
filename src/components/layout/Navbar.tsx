@@ -23,7 +23,7 @@ import { Modal } from '../ui/Modal';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export const Navbar: React.FC = () => {
-  const { toggleSidebar, setMobileSidebarOpen, isDark, setMode, mode } = useTheme();
+  const { toggleSidebar, setMobileSidebarOpen, isDark, setMode } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -135,8 +135,8 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => setMode(isDark ? 'light' : 'dark')}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer p-1"
-            title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
-            aria-label="Toggle theme"
+            title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+            aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
           >
             {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-500" />}
           </button>
