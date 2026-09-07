@@ -37,6 +37,8 @@ import { FileManagerPage } from './pages/apps/FileManagerPage';
 
 // System & UI
 import { ComponentShowcasePage } from './pages/ui/ComponentShowcasePage';
+import { CardsPage } from './pages/ui/CardsPage';
+import { UserInterfacePage } from './pages/ui/UserInterfacePage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { AuthPages } from './pages/auth/AuthPages';
 import { SystemPages } from './pages/system/SystemPages';
@@ -92,6 +94,9 @@ export default function App() {
 
               {/* Design System / UI Showcase */}
               <Route path="components" element={<ComponentShowcasePage />} />
+              <Route path="components/cards/:variant" element={<CardsPage />} />
+              <Route path="components/cards" element={<Navigate to="/components/cards/basic" replace />} />
+              <Route path="components/ui/:component?" element={<UserInterfacePage />} />
 
               {/* Settings */}
               <Route path="settings" element={<SettingsPage />} />

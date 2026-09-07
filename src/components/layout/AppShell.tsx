@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { useTheme } from '../../context/ThemeContext';
+import { Footer } from '../ui/Footer';
 
 export const AppShell: React.FC = () => {
   const { sidebarCollapsed, compactMode } = useTheme();
@@ -30,16 +31,7 @@ export const AppShell: React.FC = () => {
           <Outlet />
         </main>
 
-        {/* Sleek Subfooter */}
-        <footer className="border-t border-slate-200/70 dark:border-slate-800/80 py-4 px-6 text-center text-xs text-slate-400">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto">
-            <p>© {new Date().getFullYear()} Apex Admin UI. Crafted for modular Laravel & React integrations.</p>
-            <div className="flex items-center gap-4 text-[11px]">
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">● System Operational</span>
-              <span className="text-slate-400">v1.2.0-production</span>
-            </div>
-          </div>
-        </footer>
+        <Footer brand="Apex UI Template" links={[{ label: 'v1.2.0', href: '#version' }]} />
       </div>
     </div>
   );

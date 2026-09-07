@@ -1,336 +1,102 @@
-import React, { useState } from 'react';
+import { useState, type FC } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  BarChart3,
-  TrendingUp,
-  ShoppingBag,
-  Users2,
-  Building2,
-  Truck,
-  FolderKanban,
-  Package,
-  ShoppingCart,
-  Users,
-  FileText,
-  ShieldCheck,
-  Calendar,
-  MessageSquare,
-  Mail,
-  Kanban,
-  Folder,
-  Layers,
-  Settings,
-  HelpCircle,
-  ChevronDown,
-  X,
-  Sparkles,
-  Lock,
-  AlertTriangle,
-} from 'lucide-react';
+import { ChevronDown, Sparkles, X } from 'lucide-react';
+import { navigation, navigationDefaults, type NavigationItem } from '../../config/navigation';
 import { useTheme } from '../../context/ThemeContext';
 
-interface MenuItem {
-  title: string;
-  href?: string;
-  icon: React.ReactNode;
-  badge?: string | number;
-  badgeVariant?: 'primary' | 'warning' | 'success';
-  children?: { title: string; href: string; badge?: string }[];
-}
+type MenuNodeProps = {
+  item: NavigationItem;
+  level: number;
+  collapsed: boolean;
+  expanded: Record<string, boolean>;
+  toggle: (id: string) => void;
+  onNavigate: () => void;
+};
 
-interface MenuSection {
-  label: string;
-  items: MenuItem[];
-}
+const hasActiveChild = (item: NavigationItem, pathname: string): boolean =>
+  Boolean(item.href && (pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`)))) ||
+  Boolean(item.children?.some((child) => hasActiveChild(child, pathname)));
 
-export const Sidebar: React.FC = () => {
+const isVisible = (item: NavigationItem): boolean =>
+  (!item.permission || navigationDefaults.permissions.includes(item.permission)) &&
+  (!item.feature || navigationDefaults.features.includes(item.feature));
+
+const MenuNode: FC<MenuNodeProps> = ({ item, level, collapsed, expanded, toggle, onNavigate }) => {
+  const location = useLocation();
+  const children = item.children?.filter(isVisible) ?? [];
+  const hasChildren = children.length > 0;
+  const isActive = hasActiveChild(item, location.pathname);
+  const isExpanded = expanded[item.id] ?? isActive;
+  const Icon = item.icon ?? navigationDefaults.fallbackIcon;
+  const indent = level === 0 ? '' : level === 1 ? 'pl-7' : 'pl-11';
+
+  if (!hasChildren && item.href) {
+    return (
+      <li>
+        <NavLink
+          to={item.href}
+          title={collapsed ? item.title : undefined}
+          onClick={onNavigate}
+          className={({ isActive: exact }) => `group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${indent} ${exact || isActive ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-950/20' : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'}`}
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-300'}`} />
+            {!collapsed && <span className="truncate">{item.title}</span>}
+          </span>
+          {!collapsed && item.badge && <span className="rounded-md bg-indigo-500/25 px-1.5 py-0.5 text-[10px] font-bold text-indigo-100">{item.badge}</span>}
+        </NavLink>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <button type="button" onClick={() => toggle(item.id)} title={collapsed ? item.title : undefined} className={`group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${isActive ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'}`}>
+        <span className={`flex min-w-0 items-center gap-3 ${indent}`}>
+          <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-indigo-300' : 'group-hover:text-indigo-300'}`} />
+          {!collapsed && <span className="truncate">{item.title}</span>}
+        </span>
+        {!collapsed && <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />}
+      </button>
+      {!collapsed && isExpanded && hasChildren && <ul className="mt-1 space-y-1">
+        {children.map((child) => <MenuNode key={child.id} item={child} level={level + 1} collapsed={collapsed} expanded={expanded} toggle={toggle} onNavigate={onNavigate} />)}
+      </ul>}
+    </li>
+  );
+};
+
+export function Sidebar() {
   const { sidebarCollapsed, mobileSidebarOpen, setMobileSidebarOpen } = useTheme();
   const location = useLocation();
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(() => ({ dashboards: true, 'e-commerce': location.pathname.startsWith('/ecommerce'), users: location.pathname.startsWith('/users') }));
+  const toggleMenu = (id: string) => setExpandedMenus((current) => ({ ...current, [id]: !current[id] }));
+  const closeMobileMenu = () => setMobileSidebarOpen(false);
 
-  // Track expanded parent items
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    Dashboards: true,
-    'E-Commerce': location.pathname.startsWith('/ecommerce'),
-    'User Management': location.pathname.startsWith('/users') || location.pathname.startsWith('/roles'),
-    Applications: location.pathname.startsWith('/apps'),
-    Components: location.pathname.startsWith('/components'),
-  });
-
-  const toggleSubmenu = (title: string) => {
-    setExpandedMenus(prev => ({ ...prev, [title]: !prev[title] }));
-  };
-
-  const menuSections: MenuSection[] = [
-    {
-      label: 'OVERVIEW',
-      items: [
-        {
-          title: 'Dashboards',
-          icon: <LayoutDashboard className="w-4 h-4 shrink-0" />,
-          children: [
-            { title: 'Overview', href: '/' },
-            { title: 'Analytics', href: '/dashboard/analytics' },
-            { title: 'Sales', href: '/dashboard/sales' },
-            { title: 'E-Commerce', href: '/dashboard/ecommerce' },
-            { title: 'CRM', href: '/dashboard/crm' },
-            { title: 'Finance', href: '/dashboard/finance' },
-            { title: 'Logistics', href: '/dashboard/logistics' },
-            { title: 'Project', href: '/dashboard/project' },
-          ],
-        },
-      ],
-    },
-    {
-      label: 'MANAGEMENT',
-      items: [
-        {
-          title: 'E-Commerce',
-          icon: <ShoppingBag className="w-4 h-4 shrink-0" />,
-          children: [
-            { title: 'Product Catalog', href: '/ecommerce/products' },
-            { title: 'Add Product', href: '/ecommerce/products/create' },
-            { title: 'Categories', href: '/ecommerce/categories' },
-            { title: 'Orders', href: '/ecommerce/orders', badge: '5' },
-            { title: 'Customers', href: '/ecommerce/customers' },
-            { title: 'Inventory Depot', href: '/ecommerce/inventory' },
-          ],
-        },
-        {
-          title: 'User Management',
-          icon: <Users className="w-4 h-4 shrink-0" />,
-          children: [
-            { title: 'Team Users', href: '/users' },
-            { title: 'Add New User', href: '/users/create' },
-            { title: 'Roles & Permissions', href: '/roles' },
-          ],
-        },
-        {
-          title: 'Invoices',
-          href: '/invoices',
-          icon: <FileText className="w-4 h-4 shrink-0" />,
-          badge: '3',
-          badgeVariant: 'warning',
-        },
-      ],
-    },
-    {
-      label: 'APPLICATIONS',
-      items: [
-        { title: 'Calendar', href: '/apps/calendar', icon: <Calendar className="w-4 h-4 shrink-0" /> },
-        { title: 'Kanban Board', href: '/apps/kanban', icon: <Kanban className="w-4 h-4 shrink-0" /> },
-        { title: 'Chat Messenger', href: '/apps/chat', icon: <MessageSquare className="w-4 h-4 shrink-0" />, badge: '3', badgeVariant: 'primary' },
-        { title: 'Email Inbox', href: '/apps/email', icon: <Mail className="w-4 h-4 shrink-0" /> },
-        { title: 'File Manager', href: '/apps/file-manager', icon: <Folder className="w-4 h-4 shrink-0" /> },
-      ],
-    },
-    {
-      label: 'SYSTEM & UI',
-      items: [
-        {
-          title: 'UI Components',
-          href: '/components',
-          icon: <Layers className="w-4 h-4 shrink-0" />,
-          badge: 'v1.0',
-          badgeVariant: 'success',
-        },
-        { title: 'Auth Pages', href: '/auth', icon: <Lock className="w-4 h-4 shrink-0" /> },
-        { title: 'System & Errors', href: '/system', icon: <AlertTriangle className="w-4 h-4 shrink-0" /> },
-        { title: 'Settings', href: '/settings', icon: <Settings className="w-4 h-4 shrink-0" /> },
-      ],
-    },
-  ];
-
-  const renderContent = () => (
-    <div className="flex flex-col h-full bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-300">
-      {/* Brand / Logo Header */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
-        <NavLink to="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-            <div className="w-3.5 h-3.5 bg-white rounded-xs rotate-45 transition-transform group-hover:rotate-90"></div>
-          </div>
-          {!sidebarCollapsed && (
-            <div className="flex flex-col">
-              <span className="font-bold text-white text-lg tracking-tight leading-none">
-                Apex UI
-              </span>
-              <span className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase mt-1">
-                Laravel Ready
-              </span>
-            </div>
-          )}
+  const content = (
+    <div className="flex h-full flex-col border-r border-slate-800 bg-slate-950 text-slate-300">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800 px-5">
+        <NavLink to="/" className="flex items-center gap-3" onClick={closeMobileMenu}>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-400 to-violet-600 shadow-lg shadow-indigo-950/30"><span className="h-3.5 w-3.5 rotate-45 rounded-sm bg-white" /></span>
+          {!sidebarCollapsed && <span className="flex flex-col"><span className="text-lg font-bold leading-none tracking-tight text-white">Apex UI</span><span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-indigo-300">React + Laravel</span></span>}
         </NavLink>
-
-        {/* Close button on mobile */}
-        <button
-          onClick={() => setMobileSidebarOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <button type="button" onClick={closeMobileMenu} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden" aria-label="Close menu"><X className="h-5 w-5" /></button>
       </div>
-
-      {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-        {menuSections.map((section, idx) => (
-          <div key={idx}>
-            {!sidebarCollapsed && (
-              <div className="px-3 mb-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-                {section.label}
-              </div>
-            )}
-            <ul className="space-y-1">
-              {section.items.map((item, itemIdx) => {
-                const hasChildren = item.children && item.children.length > 0;
-                const isExpanded = !!expandedMenus[item.title];
-                const isActive = item.href
-                  ? location.pathname === item.href
-                  : item.children?.some(c => location.pathname === c.href);
-
-                if (hasChildren) {
-                  return (
-                    <li key={itemIdx}>
-                      <button
-                        onClick={() => toggleSubmenu(item.title)}
-                        title={sidebarCollapsed ? item.title : undefined}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-slate-800 text-white'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={isActive ? 'text-indigo-400' : 'text-slate-400'}>
-                            {item.icon}
-                          </span>
-                          {!sidebarCollapsed && <span>{item.title}</span>}
-                        </div>
-                        {!sidebarCollapsed && (
-                          <ChevronDown
-                            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                              isExpanded ? 'rotate-180' : ''
-                            }`}
-                          />
-                        )}
-                      </button>
-
-                      {/* Submenu */}
-                      {!sidebarCollapsed && isExpanded && (
-                        <ul className="mt-1 pl-6 pr-2 space-y-1">
-                          {item.children!.map((sub, subIdx) => {
-                            const isSubActive = location.pathname === sub.href;
-                            return (
-                              <li key={subIdx}>
-                                <NavLink
-                                  to={sub.href}
-                                  onClick={() => setMobileSidebarOpen(false)}
-                                  className={`flex items-center justify-between py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
-                                    isSubActive
-                                      ? 'bg-indigo-600 text-white'
-                                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                                  }`}
-                                >
-                                  <span>{sub.title}</span>
-                                  {sub.badge && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-semibold">
-                                      {sub.badge}
-                                    </span>
-                                  )}
-                                </NavLink>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                }
-
-                // Single link item
-                return (
-                  <li key={itemIdx}>
-                    <NavLink
-                      to={item.href!}
-                      title={sidebarCollapsed ? item.title : undefined}
-                      onClick={() => setMobileSidebarOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-                        }`
-                      }
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="opacity-90">{item.icon}</span>
-                        {!sidebarCollapsed && <span>{item.title}</span>}
-                      </div>
-                      {!sidebarCollapsed && item.badge && (
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                            item.badgeVariant === 'warning'
-                              ? 'bg-amber-500/20 text-amber-300'
-                              : item.badgeVariant === 'success'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : 'bg-indigo-500 text-white'
-                          }`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav aria-label="Primary navigation" className="flex-1 overflow-y-auto px-3 py-4">
+        {navigation.map((section) => {
+          const items = section.items.filter(isVisible);
+          if (!items.length) return null;
+          return <section key={section.id} className="mb-5">
+            {!sidebarCollapsed && <h2 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">{section.label}</h2>}
+            <ul className="space-y-1">{items.map((item) => <MenuNode key={item.id} item={item} level={0} collapsed={sidebarCollapsed} expanded={expandedMenus} toggle={toggleMenu} onNavigate={closeMobileMenu} />)}</ul>
+          </section>;
+        })}
       </nav>
-
-      {/* Sidebar Footer Card (Pro Access) */}
-      {!sidebarCollapsed && (
-        <div className="p-4 bg-slate-800/50 m-4 rounded-xl border border-slate-700/50 text-xs">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="font-semibold text-slate-200">Pro Access</span>
-          </div>
-          <p className="text-slate-400 text-[10px] leading-relaxed mb-3">
-            Modular architecture ready for direct Laravel Sanctum & Inertia integration.
-          </p>
-          <NavLink
-            to="/settings"
-            className="block text-center py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors shadow-xs"
-          >
-            Upgrade Now
-          </NavLink>
-        </div>
-      )}
+      {!sidebarCollapsed && <div className="m-4 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-xs"><div className="mb-1 flex items-center gap-2 font-semibold text-slate-100"><Sparkles className="h-4 w-4 text-indigo-300" /> Template ready</div><p className="mb-3 leading-relaxed text-slate-400">Navigation, permissions, and modules can be configured for each Laravel project.</p><NavLink to="/settings" className="block rounded-lg bg-indigo-500 py-2 text-center text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-indigo-400">Open settings</NavLink></div>}
     </div>
   );
 
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <aside
-        className={`hidden lg:block fixed inset-y-0 left-0 z-30 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-20' : 'w-64'
-        }`}
-      >
-        {renderContent()}
-      </aside>
-
-      {/* Mobile Drawer Backdrop & Drawer */}
-      {mobileSidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            onClick={() => setMobileSidebarOpen(false)}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-          />
-          <div className="fixed inset-y-0 left-0 w-72 max-w-[80vw] z-50 animate-in slide-in-from-left duration-200">
-            {renderContent()}
-          </div>
-        </div>
-      )}
-    </>
-  );
-};
+  return <>
+    <aside className={`fixed inset-y-0 left-0 z-30 hidden transition-all duration-300 lg:block ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>{content}</aside>
+    {mobileSidebarOpen && <div className="fixed inset-0 z-50 lg:hidden"><button type="button" aria-label="Close menu" onClick={closeMobileMenu} className="fixed inset-0 w-full cursor-default bg-slate-950/60 backdrop-blur-sm" /><aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] animate-in slide-in-from-left duration-200">{content}</aside></div>}
+  </>;
+}
